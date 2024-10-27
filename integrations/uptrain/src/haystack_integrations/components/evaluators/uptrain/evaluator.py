@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 from haystack import DeserializationError, component, default_from_dict, default_to_dict
 from haystack.utils import Secret, deserialize_secrets_inplace
 
-from uptrain import APIClient, EvalLLM, Evals  # type: ignore
+from uptrain import APIClient, EvalLLM, Evals, Settings  # type: ignore
 from uptrain.framework.evals import ParametricEval
 
 from .metrics import (
@@ -58,6 +58,7 @@ class UpTrainEvaluator:
         api: str = "openai",
         api_key: Secret = Secret.from_env_var("OPENAI_API_KEY"),
         api_params: Optional[Dict[str, Any]] = None,
+        settings: Optional[Settings] = None
     ):
         """
         Construct a new UpTrain evaluator.
@@ -83,6 +84,7 @@ class UpTrainEvaluator:
         self.api = api
         self.api_key = api_key
         self.api_params = api_params
+        self.settings = settings
 
         self._init_backend()
         expected_inputs = self.descriptor.input_parameters
@@ -201,7 +203,7 @@ class UpTrainEvaluator:
         api_key = self.api_key.resolve_value()
         assert api_key is not None
         if self.api == "openai":
-            backend_client = EvalLLM(openai_api_key=api_key)
+            backend_client = EvalLLM(settings=self.settings, openai_api_key=api_key)
             if self.api_params is not None:
                 msg = "OpenAI API does not support additional parameters"
                 raise ValueError(msg)
